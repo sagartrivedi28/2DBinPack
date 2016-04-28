@@ -1,4 +1,4 @@
-function [Fcor,Fsets] = DicePacking( Did,Ddimx,Ddimy,Dvol,Dreq,Rmax,ax)
+function [Fcor,Fsets] = DicePacking( Did,Ddimx,Ddimy,Dvol,Dreq,Gpara,ax)
 
 %%%%%%%%%%%%% Tasks Left %%%%%%%%%%%%%%%%%%%%%
 %{
@@ -8,7 +8,8 @@ function [Fcor,Fsets] = DicePacking( Did,Ddimx,Ddimy,Dvol,Dreq,Rmax,ax)
 4. Graph Partition Algorithm: Need to consider the SameCut Dice
 %}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+Rmax = Gpara.Rmax;
+Sline = Gpara.Sline;
 
 [NDdimy,ind1] = sort(Ddimy,'descend');
 NDid = Did(ind1);
@@ -17,7 +18,7 @@ NDvol = Dvol(ind1);
 N = length(NDid);
 Maxset = N;
 
-for W = Rmax(1):-10^3:Rmax(1)/2
+for W = Rmax(1):-10^3:max(NDdimx)
     l=1;
     T_height=0;
 	shelf.height = [];
@@ -52,19 +53,19 @@ for W = Rmax(1):-10^3:Rmax(1)/2
         end;
     end; 
    
-    
     % Need to re-arrange Shelves to get maxima yield
+    
     if T_height< Rmax(2)
         Cmat = Cgraph(Dcor,N);
         sets = CGpartition(Cmat,N);
         if Maxset>length(sets)
             Maxset=length(sets);
             Fshelf = shelf;
-            Fcor = Dcor;            
+            Fcor = Dcor;
             FCmat = Cmat;
             Fsets = sets;            
         end;
-    end;    
+    end;
     shelf=[];
 
 end;
@@ -72,12 +73,14 @@ end;
 Rshift = [max(Fcor(:,3))-min(Fcor(:,1)) max(Fcor(:,4))-min(Fcor(:,2))]/2;
 axes(ax);
 cla;
+axis(1.1*[-Rmax(1)/2,Rmax(1)/2+1,-Rmax(2)/2-1,Rmax(2)/2+1]);
 rectangle('Position',[-Rmax(1)/2,-Rmax(2)/2,Rmax(1),Rmax(2)],'LineWidth',2,'LineStyle','--','EdgeColor','r');
 rectangle('Position',[-Rshift(1),-Rshift(2),2*Rshift(1),2*Rshift(2)],'LineWidth',2,'LineStyle','--');
 SetsColor = jet(length(Fsets));
 for l=1:length(Fsets)        
     for i=1:length(Fsets{l})
-        rectangle('Position',[Fcor(Fsets{l}(i),1)-Rshift(1),Fcor(Fsets{l}(i),2)-Rshift(2),Ddimx(Fsets{l}(i)),Ddimy(Fsets{l}(i))],'LineWidth',1,'FaceColor','c');
+        rectangle('Position',[Fcor(Fsets{l}(i),1)+(Sline/2)-Rshift(1), Fcor(Fsets{l}(i),2)+(Sline/2)-Rshift(2),Ddimx(Fsets{l}(i))-Sline,Ddimy(Fsets{l}(i))-Sline],'LineWidth',1,'FaceColor','c');
+        rectangle('Position',[Fcor(Fsets{l}(i),1)-Rshift(1),Fcor(Fsets{l}(i),2)-Rshift(2),Ddimx(Fsets{l}(i)),Ddimy(Fsets{l}(i))],'LineWidth',1,'LineStyle','--','EdgeColor','b');
         text(Fcor(Fsets{l}(i),1)-Rshift(1)+Ddimx(Fsets{l}(i))/2,Fcor(Fsets{l}(i),2)-Rshift(2)+Ddimy(Fsets{l}(i))/2,num2str(Fsets{l}(i)),'FontSize',8,'BackgroundColor',SetsColor(l,:));
     end;
 end;
