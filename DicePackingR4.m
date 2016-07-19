@@ -31,7 +31,7 @@ NDdimx = Ddimx(ind1);
 NDvol = Dvol(ind1);
 NDreq = Dreq(ind1,:);
 N = length(NDid);
-Maxset = N;
+Wcnt = Inf;
 
 NIso1mm = Iso1mm(ind1);
 
@@ -68,9 +68,9 @@ for W = Rmax(1):-10^3:12000 %max(NDdimx)
                     if (shelf(i).empty+NDdimx(n))~=W && Iso1mm(shelf(i).Dinfo(end-1,1))~=0
                         shelf(i).empty = shelf(i).empty+IValue;
                         Dcor(NDid(n),:) = [Dloc+IValue/2-IValue,shelf(i).level+IValue/2,Dloc+NDdimx(n)-2*IValue,shelf(i).level+NDdimy(n)-IValue];
-                        temp = shelf(i).Dinfo(end-1);
-                        shelf(i).Dinfo(end-1) = [temp(1) temp(2)-IValue/2 temp(3) temp(4)];
-                        shelf(i).Dinfo(end) = [temp(1) temp(2)-IValue/2 temp(3)-IValue/2 temp(4)];
+                        temp = shelf(i).Dinfo(end-1,:);
+                        shelf(i).Dinfo(end-1,:) = [temp(1) temp(2)-IValue/2 temp(3) temp(4)];
+                        shelf(i).Dinfo(end,:) = [temp(1) temp(2)-IValue/2 temp(3)-IValue/2 temp(4)];
                     end;
                     
                     
@@ -115,8 +115,8 @@ for W = Rmax(1):-10^3:12000 %max(NDdimx)
     if T_height< Rmax(2)
         Cmat = Cgraph(Dcor,Dvol,N);
         [sets, Wvector] = CGpartition(Cmat,Dvol,N,Rno);
-        if Maxset>length(Wvector)
-            Maxset=length(Wvector);
+        if Wcnt>sum(Wvector)
+            Wcnt = sum(Wvector);            
             Fwafer = Wvector;
             Fshelf = shelf;
             Fcor = Dcor;
@@ -128,6 +128,7 @@ for W = Rmax(1):-10^3:12000 %max(NDdimx)
 
 end;
 
+% figure; imshow(FCmat,[]); colormap jet;
 Ddimx = Ddimx-IValue*(Iso1mm~=0);
 Ddimy = Ddimy-IValue*(Iso1mm~=0);
 
@@ -171,7 +172,7 @@ end
 function [Nsets, Wvector] = CGpartition(Cmat,Dvol,N,Rno)
 
 Tvol = Dvol;
-Vunit = min(Tvol(Tvol~=0));
+% Vunit = min(Tvol(Tvol~=0));
 
 sets=false(size(Cmat(:,1)));
 % Tvol(temp(1))=0;
@@ -181,7 +182,7 @@ while sum(Tvol)
     Sflag = false;
     
     for l=1:size(sets,2) 
-            if (~(sum(Cmat(:,temp(1)).*sets(:,l)) || sets(temp(1),l)) || Sflag)
+            if ~((sum(Cmat(:,temp(1)).*sets(:,l)) || sets(temp(1),l)) || Sflag)
                 sets(temp(1),l)=true;
                 Sflag=true;
             end;
